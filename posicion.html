@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Centro y Cuantiles</title>
+<meta name="description" content="Laboratorio interactivo de 20 minutos sobre medidas de tendencia central y no central: media, mediana, moda, cuartiles, deciles y percentiles, con puntaje y constancia de participación.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --ground:#EDF2F1; --surface:#FFFFFF; --surface-2:#F5F9F8; --surface-3:#E4EDEB;
+  --ink:#0F1E1D; --ink-2:#42605D; --ink-3:#728E8B;
+  --line:#D2DEDC; --line-2:#B4C6C3;
+  --accent:#0E6E77; --accent-2:#0B565D; --accent-soft:#D6EAEB; --on-accent:#FFFFFF;
+  --amber:#9C6612; --amber-soft:#F9EDD5; --amber-line:#E0C48A;
+  --ok:#1B7A4C; --ok-soft:#DCF0E4;
+  --bad:#A93A2C; --bad-soft:#F8E3DF;
+  --shadow:0 1px 2px rgba(15,30,29,.05), 0 8px 24px -12px rgba(15,30,29,.18);
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#091312; --surface:#101F1E; --surface-2:#152726; --surface-3:#1C3231;
+    --ink:#E6EEEC; --ink-2:#A9C0BD; --ink-3:#7C9491;
+    --line:#223836; --line-2:#33504D;
+    --accent:#43B5BA; --accent-2:#6FD0D3; --accent-soft:#10312F; --on-accent:#04191A;
+    --amber:#E0AC4C; --amber-soft:#31260F; --amber-line:#5C4A1E;
+    --ok:#4FBE84; --ok-soft:#0F2C1F;
+    --bad:#E5806E; --bad-soft:#331813;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#091312; --surface:#101F1E; --surface-2:#152726; --surface-3:#1C3231;
+  --ink:#E6EEEC; --ink-2:#A9C0BD; --ink-3:#7C9491;
+  --line:#223836; --line-2:#33504D;
+  --accent:#43B5BA; --accent-2:#6FD0D3; --accent-soft:#10312F; --on-accent:#04191A;
+  --amber:#E0AC4C; --amber-soft:#31260F; --amber-line:#5C4A1E;
+  --ok:#4FBE84; --ok-soft:#0F2C1F;
+  --bad:#E5806E; --bad-soft:#331813;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:17px; line-height:1.6;
+}
+h1,h2,h3,h4{font-family:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;font-weight:700;text-wrap:balance;margin:0;line-height:1.15;letter-spacing:-.015em}
+.mono,input,.num,table.freq,.chip,.tag{font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;font-variant-numeric:tabular-nums}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:var(--accent)}
+
+/* ---------- shell ---------- */
+.wrap{max-width:880px;margin:0 auto;padding:0 20px 96px}
+.bar{
+  position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--surface) 92%,transparent);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+}
+.bar-in{max-width:880px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-right:auto;display:flex;align-items:center;gap:9px}
+.brand .dot{width:9px;height:9px;border-radius:2px;background:var(--accent);display:inline-block}
+.timer{
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:1.15rem;font-weight:600;
+  padding:4px 11px;border-radius:8px;background:var(--surface-3);color:var(--ink);border:1px solid var(--line-2);
+  letter-spacing:.02em;
+}
+.timer.warn{background:var(--amber-soft);color:var(--amber);border-color:var(--amber-line)}
+.timer.crit{background:var(--bad-soft);color:var(--bad);border-color:var(--bad);animation:pulse 1s steps(2,end) infinite}
+@keyframes pulse{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.timer.crit{animation:none}}
+.scorepill{font-family:"IBM Plex Mono",monospace;font-size:.85rem;padding:5px 10px;border-radius:8px;background:var(--accent-soft);color:var(--accent);border:1px solid transparent;font-weight:600}
+.iconbtn{background:transparent;border:1px solid var(--line-2);color:var(--ink-2);border-radius:8px;width:34px;height:34px;display:grid;place-items:center;font-size:.95rem}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.iconbtn:focus-visible,button:focus-visible,input:focus-visible,.opt:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+
+.track{height:3px;background:var(--line);position:relative}
+.track > i{display:block;height:100%;background:var(--accent);width:0;transition:width .45s cubic-bezier(.2,.7,.3,1)}
+
+/* ---------- generic blocks ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.lead{color:var(--ink-2);font-size:1.02rem}
+.btn{
+  border:1px solid transparent;background:var(--accent);color:var(--on-accent);
+  font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:600;font-size:.95rem;
+  padding:11px 20px;border-radius:8px;transition:background .15s,transform .08s;
+}
+.btn:hover{background:var(--accent-2)}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--accent);border-color:var(--line-2)}
+.btn.ghost:hover{border-color:var(--accent);background:var(--accent-soft)}
+
+/* ---------- intro ---------- */
+.hero{padding:52px 0 28px}
+.hero h1{font-size:clamp(2rem,5.2vw,3.1rem);margin:14px 0 12px}
+.hero h1 em{font-style:normal;color:var(--accent);font-variant:normal}
+.rulecard{margin-top:26px;padding:22px;display:grid;gap:14px}
+.rulegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.rule{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:13px 14px}
+.rule b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:.9rem;margin-bottom:3px}
+.rule span{font-size:.88rem;color:var(--ink-2)}
+.idform{display:grid;gap:12px;grid-template-columns:1fr 1fr;margin-top:8px}
+.field{display:grid;gap:5px}
+.field label{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+input[type=text],input[type=number]{
+  background:var(--surface-2);border:1px solid var(--line-2);border-radius:7px;color:var(--ink);
+  padding:10px 12px;font-size:1rem;width:100%;
+}
+input::placeholder{color:var(--ink-3);opacity:.7}
+input.ok{border-color:var(--ok);background:var(--ok-soft)}
+input.bad{border-color:var(--bad);background:var(--bad-soft)}
+.full{grid-column:1/-1}
+
+/* ---------- exercise ---------- */
+.ctx{margin:24px 0;padding:22px;border-left:3px solid var(--accent)}
+.ctx h2{font-size:1.35rem;margin-bottom:8px}
+.ctx .src{margin-top:12px;font-size:.8rem;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.databox{margin-top:16px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);overflow:hidden}
+.databox header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--line);background:var(--surface-3);flex-wrap:wrap}
+.databox header span{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.datagrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:2px 6px;padding:12px 13px;font-family:"IBM Plex Mono",monospace;font-size:.83rem;font-variant-numeric:tabular-nums;max-height:none}
+.datagrid b{font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:0 3px;margin:0 -3px}
+
+.step{margin-top:16px;padding:22px;position:relative;scroll-margin-top:76px}
+.step[hidden]{display:none}
+.step .head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.step .no{font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--accent);border:1px solid var(--accent);border-radius:5px;padding:1px 7px;flex:none}
+.step h3{font-size:1.18rem}
+.step .say{color:var(--ink-2);font-size:.97rem;margin:8px 0 0}
+.formula{
+  margin:14px 0;padding:13px 16px;background:var(--surface-2);border:1px solid var(--line);border-left:3px solid var(--amber);
+  border-radius:6px;font-family:"IBM Plex Mono",monospace;font-size:.92rem;color:var(--ink);overflow-x:auto;white-space:pre-wrap
+}
+.formula small{display:block;color:var(--ink-2);font-size:.82rem;margin-top:6px;white-space:normal}
+.inputs{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:14px}
+.hintline{margin-top:10px;font-size:.86rem;color:var(--ink-3)}
+.actions{margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:8px;font-size:.93rem;display:none}
+.verdict.show{display:block}
+.verdict.good{background:var(--ok-soft);border:1px solid var(--ok);color:var(--ok)}
+.verdict.bad{background:var(--bad-soft);border:1px solid var(--bad);color:var(--bad)}
+.verdict b{font-family:"Bricolage Grotesque",sans-serif}
+.done{padding:13px 20px;display:flex;gap:12px;align-items:center;font-size:.9rem;color:var(--ink-2);flex-wrap:wrap}
+.done .no{font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--ink-3);border:1px solid var(--line-2);border-radius:5px;padding:1px 7px}
+.done .pts{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:.82rem;padding:2px 8px;border-radius:20px}
+.pts.p-full{background:var(--ok-soft);color:var(--ok)}
+.pts.p-part{background:var(--amber-soft);color:var(--amber)}
+.pts.p-zero{background:var(--bad-soft);color:var(--bad)}
+
+.opts{display:grid;gap:8px;margin-top:14px}
+.opt{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface-2);cursor:pointer;font-size:.95rem}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin-top:5px;accent-color:var(--accent);flex:none}
+
+table.freq{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:14px}
+table.freq th,table.freq td{border:1px solid var(--line);padding:7px 9px;text-align:right}
+table.freq th{background:var(--surface-3);font-weight:600;text-align:center;font-size:.78rem;letter-spacing:.03em;color:var(--ink-2)}
+table.freq td:first-child,table.freq th:first-child{text-align:left}
+table.freq tr.total td{background:var(--surface-3);font-weight:700}
+table.freq input{padding:5px 7px;font-size:.86rem;text-align:right;max-width:88px}
+.tablescroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sumline{margin-top:9px;font-family:"IBM Plex Mono",monospace;font-size:.83rem;color:var(--ink-3)}
+.sumline.hit{color:var(--ok)}
+
+/* ---------- results ---------- */
+.result-hero{margin-top:26px;padding:30px 26px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.grade{font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(3.2rem,12vw,5rem);font-weight:800;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.grade small{font-size:.28em;color:var(--ink-3);font-weight:600}
+.badge{display:inline-block;margin-top:12px;padding:6px 15px;border-radius:20px;font-family:"Bricolage Grotesque",sans-serif;font-size:.9rem;font-weight:600}
+.fb{margin-top:12px;padding:16px 18px;border-radius:9px;border:1px solid var(--line);background:var(--surface)}
+.fb h4{font-size:1rem;margin-bottom:4px;display:flex;gap:9px;align-items:center}
+.fb .mark{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;color:#fff;flex:none}
+.fb .mark.y{background:var(--ok)}.fb .mark.n{background:var(--bad)}.fb .mark.p{background:var(--amber)}
+.fb dl{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin:9px 0 0;font-size:.88rem}
+.fb dt{font-family:"IBM Plex Mono",monospace;font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);padding-top:3px}
+.fb dd{margin:0;font-family:"IBM Plex Mono",monospace;font-size:.86rem}
+.fb .tip{margin-top:10px;font-size:.9rem;color:var(--ink-2);border-left:2px solid var(--amber);padding-left:11px}
+.chartbox{margin-top:14px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.chartbox canvas{width:100%;height:auto;display:block}
+.figcap{font-size:.82rem;color:var(--ink-3);margin-top:9px;font-family:"IBM Plex Mono",monospace}
+
+/* ---------- constancia ---------- */
+.cert{
+  margin-top:26px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);
+  padding:34px 30px;position:relative;overflow:hidden;box-shadow:var(--shadow);
+}
+.cert::before{content:"";position:absolute;inset:0;border:1px solid var(--accent);border-radius:var(--radius);margin:9px;opacity:.35;pointer-events:none}
+.cert .kicker{text-align:center;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--accent)}
+.cert h2{text-align:center;font-size:clamp(1.4rem,4.5vw,1.95rem);margin:12px 0 4px}
+.cert .who{text-align:center;font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(1.3rem,4.5vw,1.7rem);font-weight:700;margin:18px 0 6px;color:var(--accent);text-wrap:balance}
+.cert .body{text-align:center;max-width:56ch;margin:0 auto;color:var(--ink-2);font-size:.98rem}
+.cert .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.cert .meta div{text-align:center}
+.cert .meta dt{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.cert .meta dd{margin:3px 0 0;font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:1rem}
+.cert .sig{margin-top:24px;text-align:center;font-size:.78rem;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.endbar{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+
+.foot{margin-top:40px;text-align:center;font-size:.8rem;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap{padding:0 14px 80px}
+  .idform{grid-template-columns:1fr}
+  .step,.ctx,.cert{padding:18px 16px}
+}
+
+@media print{
+  .bar,.track,.endbar,.foot,#screen-intro,#screen-exercise,#results-body{display:none !important}
+  body{background:#fff;color:#000}
+  .cert{border:1px solid #999;box-shadow:none;margin:0;page-break-inside:avoid}
+  .cert .who{color:#000}
+}
+
+/* ---------- tablas cruzadas del laboratorio 2 ---------- */
+.xtab{width:100%;border-collapse:collapse;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.85rem;font-variant-numeric:tabular-nums}
+.xtab th,.xtab td{border:1px solid var(--line);padding:6px 7px;text-align:center}
+.xtab thead th{background:var(--accent);color:var(--on-accent);font-weight:600;font-size:.76rem;letter-spacing:.02em}
+.xtab thead th.corner{background:var(--surface-3);color:var(--ink-2);text-align:left;font-weight:600}
+.xtab tbody th{background:var(--surface-2);color:var(--ink);text-align:left;font-weight:600;font-size:.8rem;white-space:nowrap}
+.xtab td.tot,.xtab th.tot{background:var(--surface-3);font-weight:700}
+.xtab input{width:100%;max-width:74px;padding:5px 6px;text-align:center;font-size:.85rem}
+.xtab tfoot th,.xtab tfoot td{background:var(--surface-3);font-weight:700}
+.xtab caption{caption-side:top;text-align:left;padding:0 0 8px;font-family:"Source Serif 4",Georgia,serif;font-size:.9rem;color:var(--ink-2)}
+.basetab{width:100%;table-layout:auto;border-collapse:collapse;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.74rem;font-variant-numeric:tabular-nums}
+.basetab th,.basetab td{border:1px solid var(--line);padding:4px 5px;white-space:nowrap}
+.basetab td:first-child{color:var(--ink-3)}
+.basetab thead th{background:var(--surface-3);color:var(--ink-2);font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;position:sticky;top:0;white-space:normal;line-height:1.25;vertical-align:bottom}
+.basetab td.num{text-align:right}
+.basetab tbody tr:nth-child(even){background:var(--surface-2)}
+.basewrap{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.pair{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pill{display:inline-block;padding:4px 12px;border-radius:20px;font-family:"IBM Plex Mono",monospace;font-size:.74rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--accent)}
+.pill.ord{background:var(--ink-2)}
+.pill.cont,.pill.disc{background:var(--amber)}
+.pair .x{font-family:"Source Serif 4",Georgia,serif;font-size:1.05rem;color:var(--ink-3)}
+
+/* ---------- laboratorio 3: medidas de posición ---------- */
+.datatab{width:100%;border-collapse:collapse;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.82rem;font-variant-numeric:tabular-nums}
+.datatab th,.datatab td{border:1px solid var(--line);padding:5px 7px;text-align:center;white-space:nowrap}
+.datatab thead th{background:var(--surface-3);color:var(--ink-2);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;position:sticky;top:0}
+.datatab tbody tr:nth-child(even){background:var(--surface-2)}
+.datatab td.val{text-align:right;font-weight:600;padding-right:28px}
+.datatab th:nth-child(1),.datatab td:nth-child(1){width:14%}
+.datatab th:nth-child(2),.datatab td:nth-child(2){width:34%}
+.datatab th:nth-child(3),.datatab td:nth-child(3){width:52%}
+.datatab td.cat{text-align:left;color:var(--ink-2)}
+.resumen{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;background:var(--surface-3);
+  border:1px solid var(--line-2);font-family:"IBM Plex Mono",monospace;font-size:.83rem}
+.chip b{color:var(--accent);font-weight:600}
+.chip.amb{background:var(--amber-soft);border-color:var(--amber-line)}
+.chip.amb b{color:var(--amber)}
+.minitab{border-collapse:collapse;font-family:"IBM Plex Mono",monospace;font-size:.85rem;margin-top:12px}
+.minitab th,.minitab td{border:1px solid var(--line);padding:6px 12px;text-align:center}
+.minitab th{background:var(--surface-3);font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+.propbox{margin-top:14px;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.prop{padding:10px 13px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);
+  font-family:"IBM Plex Mono",monospace;font-size:.84rem}
+.prop span{display:block;color:var(--ink-3);font-size:.74rem;margin-top:3px;font-family:"Source Serif 4",Georgia,serif}
+
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="bar-in">
+    <div class="brand"><span class="dot"></span> Estadística · Sesión 2 · Medidas de posición</div>
+    <div id="scorepill" class="scorepill" hidden>0.0 / 20</div>
+    <div id="timer" class="timer" hidden>20:00</div>
+    <button id="themeBtn" class="iconbtn" type="button" aria-label="Cambiar tema" title="Cambiar tema">◐</button>
+  </div>
+  <div class="track"><i id="trackFill"></i></div>
+</div>
+
+<main class="wrap">
+
+  <!-- ================= INTRO ================= -->
+  <section id="screen-intro">
+    <div class="hero">
+      <div class="eyebrow">Medidas de tendencia central y no central</div>
+      <h1>Dónde se paran los datos: <em>centro y cuantiles</em></h1>
+      <p class="lead">Un caso real distinto en cada intento. Calculas media, mediana y moda; ubicas cuartiles, deciles y percentiles con la fórmula de posición de la Sesión 2; comparas una variable continua entre grupos y aplicas las propiedades de la media. Tienes 20 minutos.</p>
+    </div>
+
+    <div class="card rulecard">
+      <div class="eyebrow">Lo que vas a usar</div>
+      <div class="rulegrid">
+        <div class="rule"><b>Media</b><span>x̄ = Σxᵢ / n. Usa todos los datos y la arrastran los valores extremos.</span></div>
+        <div class="rule"><b>Mediana</b><span>El valor central de los datos ordenados. Distinta fórmula si n es par o impar.</span></div>
+        <div class="rule"><b>Moda</b><span>El valor que más se repite. Puede no existir, o haber más de una.</span></div>
+        <div class="rule"><b>Cuantiles</b><span>Cuartiles, deciles y percentiles: la posición se calcula con j = k(n+1)/100.</span></div>
+      </div>
+
+      <div class="formula">Posición del percentil:   j = k (n + 1) / 100
+Si j es entero, P<sub>k</sub> es el dato de esa posición. Si no lo es:   P<sub>k</sub> = L<sub>i</sub> + dec × (L<sub>d</sub> − L<sub>i</sub>)
+<small>L<sub>i</sub> es el dato de la posición entera anterior, L<sub>d</sub> el de la siguiente y «dec» es la parte decimal de j. Recuerda las equivalencias: Q₁ = P₂₅, Q₂ = P₅₀ = D₅ = Me, Q₃ = P₇₅, D₁ = P₁₀, …, D₉ = P₉₀.</small></div>
+
+      <div class="eyebrow" style="margin-top:6px">Identifícate</div>
+      <div class="idform">
+        <div class="field"><label for="in-ape">Apellidos</label><input type="text" id="in-ape" autocomplete="family-name" placeholder="Quispe Rojas"></div>
+        <div class="field"><label for="in-nom">Nombres</label><input type="text" id="in-nom" autocomplete="given-name" placeholder="María Isabel"></div>
+        <div class="field"><label for="in-cod">Código / DNI <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="in-cod" placeholder="2026xxxxx"></div>
+        <div class="field"><label for="in-sec">Sección / NRC <span style="text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="in-sec" placeholder="EST42016 - 01"></div>
+        <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button id="startBtn" class="btn" type="button">Comenzar los 20 minutos</button>
+          <span id="idErr" style="color:var(--bad);font-size:.88rem"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EXERCISE ================= -->
+  <section id="screen-exercise" hidden>
+    <div class="card ctx">
+      <div class="eyebrow" id="ctx-tag">Caso</div>
+      <h2 id="ctx-title"></h2>
+      <p class="lead" id="ctx-text"></p>
+      <p class="src" id="ctx-src"></p>
+      <div class="databox">
+        <header>
+          <span id="data-caption"></span>
+          <span id="data-n"></span>
+        </header>
+        <div class="basewrap"><div id="data-table"></div></div>
+      </div>
+      <div class="resumen" id="data-resumen"></div>
+    </div>
+    <div id="steps"></div>
+  </section>
+
+  <!-- ================= RESULTS ================= -->
+  <section id="screen-results" hidden>
+    <div id="results-body">
+      <div class="result-hero">
+        <div class="eyebrow">Resultado del laboratorio</div>
+        <div class="grade" id="r-grade">0.0<small> / 20</small></div>
+        <div class="badge" id="r-badge"></div>
+        <p class="lead" id="r-line" style="margin-top:14px"></p>
+      </div>
+
+      <h3 style="margin:30px 0 4px">Retroalimentación paso a paso</h3>
+      <p class="lead" style="font-size:.94rem">Tu respuesta frente a la correcta, y qué revisar en cada caso.</p>
+      <div id="r-feedback"></div>
+
+      <h3 style="margin:32px 0 4px">Resumen de las medidas</h3>
+      <p class="lead" style="font-size:.94rem" id="r-tablecap"></p>
+      <div class="chartbox"><div class="tablescroll" id="r-tabla"></div></div>
+
+      <div class="chartbox" style="margin-top:14px">
+        <canvas id="r-chart" height="300"></canvas>
+        <p class="figcap" id="r-figcap"></p>
+      </div>
+    </div>
+
+    <div class="cert" id="constancia">
+      <div class="kicker">Constancia de participación</div>
+      <h2>Laboratorio de medidas de tendencia central y no central</h2>
+      <p class="body" style="text-align:center;margin-top:6px">Se deja constancia de que el/la estudiante</p>
+      <div class="who" id="c-name"></div>
+      <p class="body">participó en el laboratorio interactivo de la <strong>Sesión 2 — Medidas de resumen</strong> del curso de Estadística, calculando media, mediana y moda, ubicando cuartiles, deciles y percentiles con la fórmula de posición para datos no agrupados, comparando una variable cuantitativa continua en función de una variable cualitativa nominal y aplicando las propiedades de la media aritmética.</p>
+      <div class="meta">
+        <div><dt>Caso resuelto</dt><dd id="c-case"></dd></div>
+        <div><dt>Cuantiles trabajados</dt><dd id="c-cuant"></dd></div>
+        <div><dt>Puntaje</dt><dd id="c-score"></dd></div>
+        <div><dt>Tiempo empleado</dt><dd id="c-time"></dd></div>
+        <div><dt>Fecha</dt><dd id="c-date"></dd></div>
+      </div>
+      <div class="sig">Código de verificación: <span id="c-code"></span> · Curso de Estadística · Sesión 2</div>
+    </div>
+
+    <div class="endbar">
+      <button class="btn" type="button" id="printBtn">Imprimir / Guardar constancia en PDF</button>
+      <button class="btn ghost" type="button" id="againBtn">Practicar con otro caso</button>
+    </div>
+  </section>
+
+  <p class="foot">Los contextos son situaciones reales de 2026; los datos son simulados con fines didácticos.</p>
+</main>
+
+<script>
+/* =========================================================================
+   Laboratorio — Medidas de tendencia central y no central (Sesión 2)
+   Media, mediana y moda · cuartiles, deciles y percentiles con
+   j = k(n+1)/100 · media de una continua en función de una nominal ·
+   propiedades de la media · relación entre media, mediana y moda.
+   ========================================================================= */
+(function () {
+  "use strict";
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
+  var shuffle = function (a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); };
+  var num = function (v) { var x = parseFloat(String(v == null ? "" : v).replace(",", ".").trim()); return isFinite(x) ? x : null; };
+  var eq = function (a, b, tol) { return a != null && Math.abs(a - b) <= (tol == null ? 0.011 : tol); };
+  var SUBD = { 0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅", 6: "₆", 7: "₇", 8: "₈", 9: "₉" };
+  var sub = function (n) { return String(n).split("").map(function (d) { return SUBD[d] || d; }).join(""); };
+  var f2 = function (x) { return x.toFixed(2); };
+  var f1 = function (x) { return x.toFixed(1); };
+
+  /* ---------------- casos reales 2026 (datos simulados) ---------------- */
+  var SCEN = [
+    { tag: "Movilidad eléctrica", title: "Recarga de vehículos eléctricos en Lima",
+      subject: "recargas", unidad: "minutos", variable: "Tiempo de recarga",
+      text: function (n) { return "Una red de electrolineras registró el tiempo de recarga de " + n + " vehículos eléctricos atendidos durante una jornada de 2026."; },
+      fuente: "Registro de la red de electrolineras (datos simulados con fines didácticos)",
+      grupo: "Tipo de cargador", cats: ["Rápido", "Estándar"], mu: [28, 46], sd: [5.5, 7.0] },
+
+    { tag: "Conectividad", title: "Consumo de datos móviles",
+      subject: "usuarios", unidad: "GB", variable: "Consumo mensual de datos",
+      text: function (n) { return "Un operador de telecomunicaciones revisó el consumo mensual de datos de " + n + " usuarios durante 2026."; },
+      fuente: "Reporte de consumo del operador (datos simulados con fines didácticos)",
+      grupo: "Tipo de plan", cats: ["Postpago", "Prepago"], mu: [42, 27], sd: [7.5, 5.5] },
+
+    { tag: "Energía renovable", title: "Generación de paneles solares residenciales",
+      subject: "instalaciones", unidad: "kWh", variable: "Energía generada por día",
+      text: function (n) { return "Un programa de techos solares midió la energía generada por día en " + n + " instalaciones residenciales durante 2026."; },
+      fuente: "Programa de techos solares (datos simulados con fines didácticos)",
+      grupo: "Tipo de instalación", cats: ["En techo", "En suelo"], mu: [12.5, 17.0], sd: [2.4, 2.9] },
+
+    { tag: "Comercio digital", title: "Entregas por aplicativo de delivery",
+      subject: "pedidos", unidad: "minutos", variable: "Tiempo de entrega",
+      text: function (n) { return "Una aplicación de delivery registró el tiempo de entrega de " + n + " pedidos atendidos en Lima durante 2026."; },
+      fuente: "Panel de operaciones del aplicativo (datos simulados con fines didácticos)",
+      grupo: "Zona de entrega", cats: ["Centro", "Periferia"], mu: [26, 38], sd: [5.0, 6.5] },
+
+    { tag: "Consumo de hogares", title: "Compra semanal de alimentos",
+      subject: "hogares", unidad: "soles", variable: "Gasto semanal en alimentos",
+      text: function (n) { return "Un estudio de consumo registró el gasto semanal en alimentos de " + n + " hogares limeños durante 2026."; },
+      fuente: "Estudio de consumo de hogares (datos simulados con fines didácticos)",
+      grupo: "Lugar de compra", cats: ["Mercado de barrio", "Supermercado"], mu: [185, 245], sd: [28, 34] },
+
+    { tag: "Educación e IA", title: "Uso de inteligencia artificial en la universidad",
+      subject: "estudiantes", unidad: "horas", variable: "Horas semanales de uso de IA",
+      text: function (n) { return "El área de innovación docente encuestó a " + n + " estudiantes sobre sus horas semanales de uso de inteligencia artificial generativa en el ciclo 2026-2."; },
+      fuente: "Encuesta de innovación docente (datos simulados con fines didácticos)",
+      grupo: "Facultad", cats: ["Ingeniería", "Negocios"], mu: [11.5, 8.0], sd: [2.6, 2.2] },
+
+    { tag: "Gastronomía", title: "Desperdicio de alimentos en restaurantes",
+      subject: "restaurantes", unidad: "kilogramos", variable: "Merma de alimentos por semana",
+      text: function (n) { return "Un estudio sobre desperdicio de alimentos midió la merma semanal de cocina en " + n + " restaurantes de Lima durante 2026."; },
+      fuente: "Estudio de desperdicio de alimentos (datos simulados con fines didácticos)",
+      grupo: "Tipo de cocina", cats: ["Criolla", "Marina"], mu: [34, 25], sd: [6.0, 5.0] },
+
+    { tag: "Reciclaje urbano", title: "Reciclaje en los hogares",
+      subject: "viviendas", unidad: "kilogramos", variable: "Residuos reciclados por semana",
+      text: function (n) { return "Un programa municipal de economía circular pesó los residuos reciclados por semana en " + n + " viviendas durante 2026."; },
+      fuente: "Programa municipal de reciclaje (datos simulados con fines didácticos)",
+      grupo: "Tipo de vivienda", cats: ["Casa", "Departamento"], mu: [6.8, 4.5], sd: [1.5, 1.2] },
+
+    { tag: "Transporte urbano", title: "Tarifas de aplicativos de taxi",
+      subject: "viajes", unidad: "soles", variable: "Precio del viaje",
+      text: function (n) { return "Se registró el precio cobrado en " + n + " viajes de una misma ruta solicitados por aplicativo en Lima durante 2026."; },
+      fuente: "Registro de viajes por aplicativo (datos simulados con fines didácticos)",
+      grupo: "Franja horaria", cats: ["Hora punta", "Hora valle"], mu: [24, 16], sd: [4.2, 3.0] },
+
+    { tag: "Calidad del aire", title: "Material particulado PM2.5 en Lima",
+      subject: "días", unidad: "µg/m³", variable: "Concentración diaria de PM2.5",
+      text: function (n) { return "Dos estaciones de monitoreo registraron la concentración diaria de PM2.5 durante " + n + " días del invierno de 2026."; },
+      fuente: "Estaciones de monitoreo de calidad del aire (datos simulados con fines didácticos)",
+      grupo: "Estación de monitoreo", cats: ["Lima Norte", "Lima Sur"], mu: [48, 34], sd: [8.0, 6.5] }
+  ];
+
+  var NS = [20, 22, 24, 26];
+  /* cuantiles cuya posición j se mantiene dentro del conjunto de datos */
+  var CUANT = [
+    { k: 25, et: "Q₁", nom: "primer cuartil (Q₁ = P₂₅)" },
+    { k: 75, et: "Q₃", nom: "tercer cuartil (Q₃ = P₇₅)" },
+    { k: 10, et: "D₁", nom: "primer decil (D₁ = P₁₀)" },
+    { k: 20, et: "D₂", nom: "segundo decil (D₂ = P₂₀)" },
+    { k: 30, et: "D₃", nom: "tercer decil (D₃ = P₃₀)" },
+    { k: 40, et: "D₄", nom: "cuarto decil (D₄ = P₄₀)" },
+    { k: 60, et: "D₆", nom: "sexto decil (D₆ = P₆₀)" },
+    { k: 70, et: "D₇", nom: "séptimo decil (D₇ = P₇₀)" },
+    { k: 80, et: "D₈", nom: "octavo decil (D₈ = P₈₀)" },
+    { k: 90, et: "D₉", nom: "noveno decil (D₉ = P₉₀)" },
+    { k: 35, et: "P₃₅", nom: "percentil 35" },
+    { k: 45, et: "P₄₅", nom: "percentil 45" },
+    { k: 65, et: "P₆₅", nom: "percentil 65" },
+    { k: 85, et: "P₈₅", nom: "percentil 85" }
+  ];
+
+  /* ---------------- cálculo según la Sesión 2 ---------------- */
+  function mediana(ord) {
+    var n = ord.length;
+    if (n % 2 === 1) return { valor: ord[(n + 1) / 2 - 1], par: false, p1: (n + 1) / 2, p2: null };
+    var a = ord[n / 2 - 1], b = ord[n / 2];
+    return { valor: (a + b) / 2, par: true, p1: n / 2, p2: n / 2 + 1, x1: a, x2: b };
+  }
+  function percentil(ord, k) {
+    var n = ord.length, j = k * (n + 1) / 100;
+    var ent = Math.floor(j + 1e-9), dec = j - ent;
+    if (dec < 1e-9) return { j: j, dec: 0, entero: true, valor: ord[ent - 1], Li: ord[ent - 1], Ld: ord[ent - 1] };
+    return { j: j, dec: dec, entero: false, Li: ord[ent - 1], Ld: ord[ent], valor: ord[ent - 1] + dec * (ord[ent] - ord[ent - 1]) };
+  }
+  function moda(vals) {
+    var c = {}, mx = 0;
+    vals.forEach(function (v) { var k = v.toFixed(1); c[k] = (c[k] || 0) + 1; if (c[k] > mx) mx = c[k]; });
+    var ms = Object.keys(c).filter(function (k) { return c[k] === mx; }).map(parseFloat).sort(function (a, b) { return a - b; });
+    return { valores: ms, frec: mx, unica: ms.length === 1 };
+  }
+  var suma = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); };
+  var media = function (a) { return suma(a) / a.length; };
+  var desv = function (a) { var m = media(a); return Math.sqrt(suma(a.map(function (x) { return (x - m) * (x - m); })) / (a.length - 1)); };
+
+  /* ---------------- generación del ejercicio ---------------- */
+  function randn() { var s = 0; for (var i = 0; i < 3; i++) s += Math.random(); return (s - 1.5) / 0.5; }
+
+  function buildExercise() {
+    for (var intento = 0; intento < 400; intento++) {
+      var sc = pick(SCEN), n = pick(NS);
+      var nA = Math.round(n / 2) + pick([-1, 0, 0, 1]);
+      if (nA < 8 || n - nA < 8) nA = Math.round(n / 2);
+      var nB = n - nA;
+      var reg = [];
+      for (var i = 0; i < nA; i++) reg.push({ v: sc.mu[0] + randn() * sc.sd[0], g: sc.cats[0] });
+      for (var q = 0; q < nB; q++) reg.push({ v: sc.mu[1] + randn() * sc.sd[1], g: sc.cats[1] });
+
+      /* sesgo: se estiran las tres colas de un lado */
+      var dir = pick([1, -1]);
+      reg.sort(function (a, b) { return a.v - b.v; });
+      var rango = reg[n - 1].v - reg[0].v;
+      for (var t = 0; t < 3; t++) {
+        var idx = dir === 1 ? n - 1 - t : t;
+        reg[idx].v += dir * rango * (0.18 - 0.045 * t) * (0.8 + 0.5 * Math.random());
+      }
+      reg.forEach(function (r) { r.v = Math.round(r.v * 10) / 10; });
+      reg.sort(function (a, b) { return a.v - b.v; });
+
+      /* moda: se fuerza un valor repetido tres veces del lado opuesto a la cola */
+      var im = dir === 1 ? Math.floor(n * 0.30) : Math.floor(n * 0.68);
+      im = Math.max(1, Math.min(n - 2, im));
+      var vm = reg[im].v;
+      reg[im - 1].v = vm; reg[im + 1].v = vm;
+      reg.sort(function (a, b) { return a.v - b.v; });
+
+      var vals = reg.map(function (r) { return r.v; });
+      var S = Math.round(suma(vals) * 10) / 10;
+      var xb = S / n, Me = mediana(vals), Mo = moda(vals);
+      if (!Mo.unica || Mo.frec !== 3) continue;
+
+      /* relación media – mediana – moda: se exige un orden estricto y visible */
+      var esc1 = (vals[n - 1] - vals[0]) * 0.035;
+      var rel;
+      if (xb - Me.valor > esc1 && Me.valor - Mo.valores[0] > esc1) rel = "derecha";
+      else if (Me.valor - xb > esc1 && Mo.valores[0] - Me.valor > esc1) rel = "izquierda";
+      else continue;
+
+      /* dos cuantiles con posición no entera y vecinos distintos */
+      var cs = shuffle(CUANT);
+      var c1 = null, c2 = null;
+      for (var z = 0; z < cs.length; z++) {
+        var p = percentil(vals, cs[z].k);
+        if (p.entero || p.Ld <= p.Li) continue;
+        if (!c1) { c1 = { def: cs[z], p: p }; }
+        else if (!c2 && Math.abs(cs[z].k - c1.def.k) >= 20) { c2 = { def: cs[z], p: p }; break; }
+      }
+      if (!c1 || !c2) continue;
+
+      /* medias por grupo */
+      var gA = reg.filter(function (r) { return r.g === sc.cats[0]; }).map(function (r) { return r.v; });
+      var gB = reg.filter(function (r) { return r.g === sc.cats[1]; }).map(function (r) { return r.v; });
+      if (gA.length < 8 || gB.length < 8) continue;
+      var mA = media(gA), mB = media(gB);
+      if (Math.abs(mA - mB) < 0.55 * desv(vals)) continue;
+      /* el grupo a calcular a mano es el más pequeño */
+      var chico = gA.length <= gB.length ? 0 : 1;
+
+      /* propiedad de la media: y = c·x + b */
+      var cc = pick([1.05, 1.08, 1.10, 1.12, 0.95, 0.90]);
+      var bb = pick([1.5, 2, 2.5, 3, 5, -2, -1.5, -3]);
+      var nuevaMedia = cc * xb + bb;
+
+      return {
+        sc: sc, n: n, reg: reg, vals: vals, S: S, xb: xb, Me: Me, Mo: Mo, rel: rel, dir: dir,
+        c1: c1, c2: c2, gA: gA, gB: gB, mA: mA, mB: mB, chico: chico,
+        cc: cc, bb: bb, nuevaMedia: nuevaMedia,
+        sumaChico: Math.round(suma(chico === 0 ? gA : gB) * 10) / 10
+      };
+    }
+    return null;
+  }
+
+  var EX = null;
+  var ST = { alumno: {}, idx: 0, results: [], pts: 0, started: 0, left: 1200, tick: null, finished: false };
+  var TOTAL_SEG = 1200;
+
+  /* ---------------- tema y cronómetro ---------------- */
+  $("#themeBtn").addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var sysDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var now = cur ? cur : (sysDark ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", now === "dark" ? "light" : "dark");
+  });
+  function paintTimer() {
+    var t = $("#timer"), mm = Math.floor(ST.left / 60), ss = ST.left % 60;
+    t.textContent = mm + ":" + (ss < 10 ? "0" : "") + ss;
+    t.className = "timer" + (ST.left <= 90 ? " crit" : (ST.left <= 240 ? " warn" : ""));
+  }
+  function startTimer() {
+    ST.started = Date.now(); paintTimer();
+    ST.tick = setInterval(function () {
+      ST.left--;
+      if (ST.left <= 0) { ST.left = 0; paintTimer(); finish(true); return; }
+      paintTimer();
+    }, 1000);
+  }
+  function paintScore() {
+    $("#scorepill").textContent = (Math.round(ST.pts * 10) / 10).toFixed(1) + " / 20";
+    $("#trackFill").style.width = Math.round((ST.idx / STEPS.length) * 100) + "%";
+  }
+  function fld(id, label, ancho) {
+    return '<div class="field"' + (ancho ? ' style="max-width:' + ancho + '"' : "") + '><label for="' + id + '">' + label +
+      '</label><input type="text" inputmode="decimal" autocomplete="off" id="' + id + '"></div>';
+  }
+  function mark(inp, ok) { if (!inp) return; inp.classList.remove("ok", "bad"); inp.classList.add(ok ? "ok" : "bad"); }
+  function opciones(nombre, lista) {
+    return '<div class="opts">' + lista.map(function (o, i) {
+      return '<label class="opt"><input type="radio" name="' + nombre + '" value="' + i + '"><span>' + esc(o.t) + "</span></label>";
+    }).join("") + "</div>";
+  }
+  function gradeMC(e, root, nombre, lista, pts, tip) {
+    var sel = root.querySelector('input[name="' + nombre + '"]:checked');
+    var ok = sel && lista[+sel.value].ok;
+    return { pts: ok ? pts : 0,
+      user: [["Tu elección", sel ? lista[+sel.value].t : "sin responder"]],
+      right: [["Correcta", lista.find(function (o) { return o.ok; }).t]], tip: tip };
+  }
+
+  /* =======================================================================
+     PASOS
+     ===================================================================== */
+  var STEPS = [
+    /* 1 · media */
+    {
+      title: "Paso 1 · Media aritmética", max: 2,
+      html: function (e) {
+        return '<p class="say">La media usa todos los datos: es la suma de los valores dividida entre el número de observaciones.</p>' +
+          '<div class="formula">x̄ = Σ xᵢ / n = ' + f1(e.S) + " / " + e.n +
+          "<small>La suma de los " + e.n + " valores ya está calculada en el recuadro del caso. Escribe el resultado con 2 decimales.</small></div>" +
+          '<div class="inputs">' + fld("s1", "x̄ (" + e.sc.unidad + ")", "230px") + "</div>";
+      },
+      grade: function (e, root) {
+        var v = num(root.querySelector("#s1").value), ok = eq(v, e.xb);
+        mark(root.querySelector("#s1"), ok);
+        return { pts: ok ? 2 : 0, user: [["x̄", v == null ? "—" : v]], right: [["x̄", f2(e.xb)]],
+          tip: "x̄ = " + f1(e.S) + " / " + e.n + " = " + f2(e.xb) + " " + e.sc.unidad + "." };
+      }
+    },
+
+    /* 2 · mediana */
+    {
+      title: "Paso 2 · Mediana", max: 3,
+      html: function (e) {
+        var par = e.n % 2 === 0;
+        var ops = par
+          ? [{ t: "n es par: la mediana es la semisuma de los valores que ocupan las posiciones " + (e.n / 2) + " y " + (e.n / 2 + 1) + ".", ok: true },
+             { t: "n es par: la mediana es el valor que ocupa la posición " + ((e.n + 1) / 2).toFixed(1) + ".", ok: false },
+             { t: "n es par: la mediana es el promedio de todos los datos.", ok: false },
+             { t: "n es par: la mediana es el valor que ocupa la posición " + (e.n / 2) + ".", ok: false }]
+          : [{ t: "n es impar: la mediana es el valor que ocupa la posición " + ((e.n + 1) / 2) + ".", ok: true },
+             { t: "n es impar: la mediana es la semisuma de los valores de las posiciones " + Math.floor(e.n / 2) + " y " + (Math.floor(e.n / 2) + 1) + ".", ok: false },
+             { t: "n es impar: la mediana es el valor que ocupa la posición " + (e.n / 2).toFixed(1) + ".", ok: false },
+             { t: "n es impar: la mediana coincide siempre con la moda.", ok: false }];
+        e._q2 = shuffle(ops);
+        return '<p class="say">Los datos ya están ordenados de menor a mayor en la tabla del caso. Con n = ' + e.n +
+          " observaciones, primero decides qué fórmula corresponde.</p>" +
+          '<div class="formula">n impar:  Me = x₍₍ₙ₊₁₎/₂₎        n par:  Me = ( x₍ₙ/₂₎ + x₍ₙ/₂₊₁₎ ) / 2</div>' +
+          opciones("q2", e._q2) +
+          '<div class="inputs" style="margin-top:16px">' + fld("s2", "Mediana (" + e.sc.unidad + ")", "230px") + "</div>";
+      },
+      grade: function (e, root) {
+        var sel = root.querySelector('input[name="q2"]:checked');
+        var okMC = sel && e._q2[+sel.value].ok;
+        var v = num(root.querySelector("#s2").value), okV = eq(v, e.Me.valor);
+        mark(root.querySelector("#s2"), okV);
+        var det = e.Me.par
+          ? "Me = (x" + sub(e.Me.p1) + " + x" + sub(e.Me.p2) + ") / 2 = (" + f1(e.Me.x1) + " + " + f1(e.Me.x2) + ") / 2 = " + f2(e.Me.valor)
+          : "Me = x" + sub(e.Me.p1) + " = " + f2(e.Me.valor);
+        return { pts: (okMC ? 1 : 0) + (okV ? 2 : 0),
+          user: [["Regla elegida", sel ? e._q2[+sel.value].t : "sin responder"], ["Mediana", v == null ? "—" : v]],
+          right: [["Regla", e._q2.find(function (o) { return o.ok; }).t], ["Mediana", f2(e.Me.valor)]],
+          tip: det + ". El 50 % de los " + e.sc.subject + " queda por debajo de ese valor y el otro 50 % por encima." };
+      }
+    },
+
+    /* 3 · moda */
+    {
+      title: "Paso 3 · Moda", max: 2,
+      html: function (e) {
+        return '<p class="say">La moda es el valor que más se repite. Búscalo en la tabla: hay un valor que aparece tres veces.</p>' +
+          '<div class="inputs">' + fld("s3", "Moda (" + e.sc.unidad + ")", "230px") + "</div>" +
+          '<p class="hintline">Si un solo valor tiene la frecuencia más alta, la distribución es unimodal.</p>';
+      },
+      grade: function (e, root) {
+        var v = num(root.querySelector("#s3").value), ok = eq(v, e.Mo.valores[0], 0.051);
+        mark(root.querySelector("#s3"), ok);
+        return { pts: ok ? 2 : 0, user: [["Moda", v == null ? "—" : v]], right: [["Moda", f1(e.Mo.valores[0])]],
+          tip: "Mo = " + f1(e.Mo.valores[0]) + " " + e.sc.unidad + ", con frecuencia 3. Como un solo valor alcanza la frecuencia máxima, la distribución es unimodal." };
+      }
+    },
+
+    /* 4 · relación entre media, mediana y moda */
+    {
+      title: "Paso 4 · Relación entre media, mediana y moda", max: 2,
+      html: function (e) {
+        var ops = [
+          { t: "Mo < Me < x̄ : la distribución es asimétrica a la derecha (positiva).", ok: e.rel === "derecha" },
+          { t: "x̄ < Me < Mo : la distribución es asimétrica a la izquierda (negativa).", ok: e.rel === "izquierda" },
+          { t: "x̄ = Me = Mo : la distribución es simétrica.", ok: false },
+          { t: "Me < Mo < x̄ : la distribución no tiene forma definida.", ok: false }
+        ];
+        e._q4 = shuffle(ops);
+        return '<p class="say">Compara los tres valores que acabas de calcular y clasifica la forma de la distribución.</p>' +
+          '<div class="minitab-wrap"><table class="minitab"><tr><th>Moda</th><th>Mediana</th><th>Media</th></tr>' +
+          "<tr><td>" + f2(e.Mo.valores[0]) + "</td><td>" + f2(e.Me.valor) + "</td><td>" + f2(e.xb) + "</td></tr></table></div>" +
+          opciones("q4", e._q4);
+      },
+      grade: function (e, root) {
+        return gradeMC(e, root, "q4", e._q4, 2,
+          e.rel === "derecha"
+            ? "Con Mo = " + f2(e.Mo.valores[0]) + " < Me = " + f2(e.Me.valor) + " < x̄ = " + f2(e.xb) + ", la cola larga apunta a la derecha: unos pocos valores altos jalan la media por encima de la mediana."
+            : "Con x̄ = " + f2(e.xb) + " < Me = " + f2(e.Me.valor) + " < Mo = " + f2(e.Mo.valores[0]) + ", la cola larga apunta a la izquierda: unos pocos valores bajos jalan la media por debajo de la mediana.");
+      }
+    },
+
+    /* 5 · primer cuantil, con posición */
+    {
+      title: "Paso 5 · Cuantil: posición y valor", max: 4,
+      html: function (e) {
+        var c = e.c1;
+        return '<p class="say">Calcula el <strong>' + c.def.nom + "</strong> de " + esc(e.sc.variable.toLowerCase()) +
+          ". Primero la posición, después el valor.</p>" +
+          '<div class="formula">j = k (n + 1) / 100 = ' + c.def.k + " (" + e.n + " + 1) / 100" +
+          "\nSi j no es entero:   P" + sub(c.def.k) + " = L" + sub("i").replace("i", "ᵢ") + " + dec × (L_d − L_i)" +
+          "<small>Escribe j con 2 decimales. L_i es el dato de la posición entera anterior a j, L_d el de la posición siguiente, y «dec» es la parte decimal de j.</small></div>" +
+          '<div class="inputs">' + fld("s5j", "Posición j (2 dec.)") + fld("s5v", c.def.et + " (" + e.sc.unidad + ")") + "</div>";
+      },
+      grade: function (e, root) {
+        var c = e.c1;
+        var j = num(root.querySelector("#s5j").value), v = num(root.querySelector("#s5v").value);
+        var okJ = eq(j, c.p.j, 0.011), okV = eq(v, c.p.valor, 0.02);
+        mark(root.querySelector("#s5j"), okJ); mark(root.querySelector("#s5v"), okV);
+        var ent = Math.floor(c.p.j);
+        var tip = "j = " + c.def.k + "(" + e.n + "+1)/100 = " + c.p.j.toFixed(2) + ", dec = " + c.p.dec.toFixed(2) +
+          ". L_i = x" + sub(ent) + " = " + f1(c.p.Li) + " y L_d = x" + sub(ent + 1) + " = " + f1(c.p.Ld) + ", entonces " +
+          c.def.et + " = " + f1(c.p.Li) + " + " + c.p.dec.toFixed(2) + " × (" + f1(c.p.Ld) + " − " + f1(c.p.Li) + ") = " + f2(c.p.valor) + ".";
+        if (v != null && !okV && eq(v, c.p.Li, 0.02)) tip = "Te quedaste con el dato de la posición entera anterior. Como j = " + c.p.j.toFixed(2) + " no es entero, hay que interpolar: " + c.def.et + " = " + f2(c.p.valor) + ".";
+        else if (j != null && !okJ && eq(j, c.def.k * e.n / 100, 0.02)) tip = "Usaste j = k·n/100. La fórmula de la Sesión 2 es j = k(n+1)/100, con n+1 = " + (e.n + 1) + ".";
+        return { pts: (okJ ? 2 : 0) + (okV ? 2 : 0),
+          user: [["Posición j", j == null ? "—" : j], [c.def.et, v == null ? "—" : v]],
+          right: [["Posición j", c.p.j.toFixed(2)], [c.def.et, f2(c.p.valor)]], tip: tip };
+      }
+    },
+
+    /* 6 · segundo cuantil + interpretación */
+    {
+      title: "Paso 6 · Segundo cuantil e interpretación", max: 2,
+      html: function (e) {
+        var c = e.c2, S = e.sc.subject;
+        var val = f2(c.p.valor), k = c.def.k;
+        var ops = [
+          { t: "El " + k + " % de los " + S + " tiene " + e.sc.variable.toLowerCase() + " menor que " + val + " " + e.sc.unidad + ".", ok: true },
+          { t: "El " + k + " % de los " + S + " tiene " + e.sc.variable.toLowerCase() + " mayor que " + val + " " + e.sc.unidad + ".", ok: false },
+          { t: "El " + val + " % de los " + S + " se ubica por debajo del percentil " + k + ".", ok: false },
+          { t: "El valor promedio de " + e.sc.variable.toLowerCase() + " es " + val + " " + e.sc.unidad + ".", ok: false }
+        ];
+        e._q6 = shuffle(ops);
+        return '<p class="say">Ahora el <strong>' + c.def.nom + "</strong>. Aplica el mismo procedimiento del paso anterior.</p>" +
+          '<div class="inputs">' + fld("s6v", c.def.et + " (" + e.sc.unidad + ")", "240px") + "</div>" +
+          '<p class="say" style="margin-top:18px"><strong>Interpretación.</strong> ¿Qué significa ese valor?</p>' +
+          opciones("q6", e._q6);
+      },
+      grade: function (e, root) {
+        var c = e.c2;
+        var v = num(root.querySelector("#s6v").value), okV = eq(v, c.p.valor, 0.02);
+        mark(root.querySelector("#s6v"), okV);
+        var sel = root.querySelector('input[name="q6"]:checked');
+        var okQ = sel && e._q6[+sel.value].ok;
+        var ent = Math.floor(c.p.j);
+        return { pts: (okV ? 1 : 0) + (okQ ? 1 : 0),
+          user: [[c.def.et, v == null ? "—" : v], ["Interpretación", sel ? e._q6[+sel.value].t : "sin responder"]],
+          right: [[c.def.et, f2(c.p.valor)], ["Interpretación", e._q6.find(function (o) { return o.ok; }).t]],
+          tip: "j = " + c.p.j.toFixed(2) + "; " + c.def.et + " = " + f1(c.p.Li) + " + " + c.p.dec.toFixed(2) + " × (" + f1(c.p.Ld) + " − " + f1(c.p.Li) + ") = " + f2(c.p.valor) +
+               ". Un percentil deja por debajo ese porcentaje de observaciones: no es un porcentaje de la variable ni un promedio." };
+      }
+    },
+
+    /* 7 · media de la continua en función de la nominal */
+    {
+      title: "Paso 7 · Media por grupos: la continua en función de la nominal", max: 3,
+      html: function (e) {
+        var i = e.chico, cat = e.sc.cats[i], g = i === 0 ? e.gA : e.gB;
+        var ops = [
+          { t: "El grupo «" + e.sc.cats[0] + "» tiene la media más alta.", ok: e.mA > e.mB },
+          { t: "El grupo «" + e.sc.cats[1] + "» tiene la media más alta.", ok: e.mB > e.mA },
+          { t: "Ambos grupos tienen exactamente la misma media.", ok: false },
+          { t: "No se puede comparar: la media sólo se calcula sobre el total.", ok: false }
+        ];
+        e._q7 = shuffle(ops);
+        return '<p class="say">Una variable cuantitativa continua también se resume <strong>dentro de cada categoría</strong> de una variable cualitativa. ' +
+          "Calcula la media del grupo <strong>«" + esc(cat) + "»</strong>, que tiene " + g.length + " observaciones.</p>" +
+          '<div class="formula">x̄ (' + esc(cat) + ") = Σ xᵢ del grupo / n del grupo" +
+          "<small>Filtra en la tabla del caso las filas cuya categoría de " + esc(e.sc.grupo.toLowerCase()) + " sea «" + esc(cat) + "» y suma sólo esos valores.</small></div>" +
+          '<div class="inputs">' + fld("s7", "x̄ del grupo «" + esc(cat) + "»", "280px") + "</div>" +
+          '<p class="say" style="margin-top:18px"><strong>Comparación.</strong> Mirando los dos grupos:</p>' + opciones("q7", e._q7);
+      },
+      grade: function (e, root) {
+        var i = e.chico, g = i === 0 ? e.gA : e.gB, m = i === 0 ? e.mA : e.mB;
+        var v = num(root.querySelector("#s7").value), okV = eq(v, m, 0.02);
+        mark(root.querySelector("#s7"), okV);
+        var sel = root.querySelector('input[name="q7"]:checked');
+        var okQ = sel && e._q7[+sel.value].ok;
+        return { pts: (okV ? 2 : 0) + (okQ ? 1 : 0),
+          user: [["x̄ del grupo", v == null ? "—" : v], ["Comparación", sel ? e._q7[+sel.value].t : "sin responder"]],
+          right: [["x̄ del grupo", f2(m)], ["Comparación", e._q7.find(function (o) { return o.ok; }).t]],
+          tip: "x̄ (" + e.sc.cats[i] + ") = " + f1(e.sumaChico) + " / " + g.length + " = " + f2(m) + ". El otro grupo tiene media " +
+               f2(i === 0 ? e.mB : e.mA) + ": comparar la misma variable dentro de cada categoría es lo que permite decir si el grupo influye en el resultado." };
+      }
+    },
+
+    /* 8 · propiedades de la media */
+    {
+      title: "Paso 8 · Propiedades de la media aritmética", max: 2,
+      html: function (e) {
+        var signo = e.bb >= 0 ? "+" : "−", babs = Math.abs(e.bb);
+        return '<p class="say">No hace falta recalcular nada: las propiedades permiten obtener la nueva media a partir de la anterior.</p>' +
+          '<div class="propbox">' +
+          '<div class="prop">yᵢ = xᵢ ± b   →   ȳ = x̄ ± b<span>Primera propiedad</span></div>' +
+          '<div class="prop">yᵢ = c · xᵢ   →   ȳ = c · x̄<span>Segunda propiedad</span></div>' +
+          '<div class="prop">yᵢ = c · xᵢ ± b   →   ȳ = c · x̄ ± b<span>Tercera propiedad</span></div>' +
+          "</div>" +
+          '<div class="formula" style="margin-top:16px">Cada valor de la variable se transforma así:   yᵢ = ' + e.cc + " · xᵢ " + signo + " " + babs +
+          "<small>Con la media que calculaste en el paso 1, obtén la nueva media ȳ. Escribe el resultado con 2 decimales.</small></div>" +
+          '<div class="inputs">' + fld("s8", "ȳ (" + e.sc.unidad + ")", "230px") + "</div>";
+      },
+      grade: function (e, root) {
+        var v = num(root.querySelector("#s8").value), ok = eq(v, e.nuevaMedia, 0.03);
+        mark(root.querySelector("#s8"), ok);
+        var signo = e.bb >= 0 ? "+" : "−", babs = Math.abs(e.bb);
+        var tip = "ȳ = c · x̄ " + signo + " b = " + e.cc + " × " + f2(e.xb) + " " + signo + " " + babs + " = " + f2(e.nuevaMedia) +
+          ". Es la tercera propiedad: la media se transforma igual que los datos.";
+        if (v != null && !ok && eq(v, e.cc * (e.xb + e.bb), 0.05)) tip = "Sumaste la constante antes de multiplicar. En yᵢ = c·xᵢ " + signo + " b primero se multiplica: ȳ = " + f2(e.nuevaMedia) + ".";
+        else if (v != null && !ok && eq(v, e.xb + e.bb, 0.05)) tip = "Sólo aplicaste la primera propiedad. Falta multiplicar por " + e.cc + ": ȳ = " + f2(e.nuevaMedia) + ".";
+        return { pts: ok ? 2 : 0, user: [["ȳ", v == null ? "—" : v]], right: [["ȳ", f2(e.nuevaMedia)]], tip: tip };
+      }
+    }
+  ];
+
+  /* =======================================================================
+     FLUJO
+     ===================================================================== */
+  $("#startBtn").addEventListener("click", function () {
+    var ap = $("#in-ape").value.trim(), no = $("#in-nom").value.trim();
+    if (ap.length < 2 || no.length < 2) { $("#idErr").textContent = "Escribe tus apellidos y nombres para poder emitir la constancia."; return; }
+    ST.alumno = { ape: ap, nom: no, cod: $("#in-cod").value.trim(), sec: $("#in-sec").value.trim() };
+    EX = buildExercise();
+    if (!EX) { $("#idErr").textContent = "No se pudo generar el caso; vuelve a intentarlo."; return; }
+    renderContext();
+    $("#screen-intro").hidden = true;
+    $("#screen-exercise").hidden = false;
+    $("#timer").hidden = false; $("#scorepill").hidden = false;
+    paintScore(); startTimer(); renderStep(0);
+  });
+
+  function renderContext() {
+    var e = EX, sc = e.sc;
+    $("#ctx-tag").textContent = "Caso · " + sc.tag;
+    $("#ctx-title").textContent = sc.title;
+    $("#ctx-text").innerHTML = sc.text(e.n) + " Los datos ya están ordenados de menor a mayor.";
+    $("#ctx-src").textContent = "Fuente: " + sc.fuente;
+    $("#data-caption").textContent = sc.variable + " (" + sc.unidad + ") · " + sc.grupo;
+    $("#data-n").textContent = "n = " + e.n + " " + sc.subject;
+    var h = '<table class="datatab"><thead><tr><th>Posición</th><th>' + esc(sc.variable) + " (" + esc(sc.unidad) +
+      ")</th><th>" + esc(sc.grupo) + "</th></tr></thead><tbody>";
+    e.reg.forEach(function (r, i) {
+      h += "<tr><td>" + (i + 1) + '</td><td class="val">' + f1(r.v) + '</td><td class="cat">' + esc(r.g) + "</td></tr>";
+    });
+    $("#data-table").innerHTML = h + "</tbody></table>";
+    $("#data-resumen").innerHTML =
+      '<span class="chip">n = <b>' + e.n + "</b></span>" +
+      '<span class="chip amb">Σ xᵢ = <b>' + f1(e.S) + "</b></span>" +
+      '<span class="chip">' + esc(sc.cats[0]) + ": n = <b>" + e.gA.length + "</b></span>" +
+      '<span class="chip">' + esc(sc.cats[1]) + ": n = <b>" + e.gB.length + "</b></span>" +
+      '<span class="chip">Mínimo = <b>' + f1(e.vals[0]) + "</b></span>" +
+      '<span class="chip">Máximo = <b>' + f1(e.vals[e.n - 1]) + "</b></span>";
+  }
+
+  function renderStep(i) {
+    var step = STEPS[i], e = EX;
+    var card = document.createElement("section");
+    card.className = "card step"; card.id = "step-" + i;
+    card.innerHTML = '<div class="head"><span class="no">' + (i + 1) + "/" + STEPS.length + '</span><h3>' + step.title + "</h3></div>" +
+      step.html(e) +
+      '<div class="verdict" id="v-' + i + '"></div>' +
+      '<div class="actions"><button class="btn" type="button" id="go-' + i + '">Comprobar y continuar</button>' +
+      '<span style="font-size:.85rem;color:var(--ink-3)">Vale ' + step.max + " punto" + (step.max === 1 ? "" : "s") + "</span></div>";
+    $("#steps").appendChild(card);
+    var first = card.querySelector('input[type="text"]');
+    if (first) first.focus({ preventScroll: true });
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    var btn = $("#go-" + i), checked = false;
+    btn.addEventListener("click", function () {
+      if (ST.finished) return;
+      if (!checked) {
+        checked = true;
+        var res = step.grade(e, card);
+        res.title = step.title; res.max = step.max;
+        ST.results[i] = res; ST.pts += res.pts; paintScore();
+        var v = $("#v-" + i);
+        var full = res.pts >= step.max - 1e-9, zero = res.pts <= 1e-9;
+        v.className = "verdict show " + (zero ? "bad" : "good");
+        v.innerHTML = "<b>" + (full ? "Correcto · " : (zero ? "Incorrecto · " : "Parcialmente correcto · ")) +
+          (Math.round(res.pts * 10) / 10) + " / " + step.max + " pts</b><br>" + esc(res.tip);
+        Array.prototype.forEach.call(card.querySelectorAll("input"), function (x) { x.disabled = true; });
+        btn.textContent = i === STEPS.length - 1 ? "Ver resultados →" : "Continuar →";
+      } else {
+        var r = ST.results[i], full = r.pts >= r.max - 1e-9, zero = r.pts <= 1e-9;
+        card.className = "card done";
+        card.innerHTML = '<span class="no">' + (i + 1) + "</span><span>" + esc(r.title) + '</span><span class="pts ' +
+          (full ? "p-full" : (zero ? "p-zero" : "p-part")) + '">' + (Math.round(r.pts * 10) / 10) + " / " + r.max + "</span>";
+        ST.idx = i + 1; paintScore();
+        if (i + 1 < STEPS.length) renderStep(i + 1); else finish(false);
+      }
+    });
+  }
+
+  /* ---------------- resultados ---------------- */
+  function finish(byTime) {
+    if (ST.finished) return;
+    ST.finished = true;
+    if (ST.tick) { clearInterval(ST.tick); ST.tick = null; }
+    var used = TOTAL_SEG - ST.left, e = EX;
+    for (var i = 0; i < STEPS.length; i++) {
+      if (!ST.results[i]) ST.results[i] = {
+        title: STEPS[i].title, max: STEPS[i].max, pts: 0,
+        user: [["Respuesta", "sin responder — se acabó el tiempo"]], right: [["—", "—"]],
+        tip: "No llegaste a este paso. Repite el laboratorio: te tocará otro caso y otros cuantiles."
+      };
+    }
+    var pts = Math.round(ST.pts * 10) / 10;
+    $("#screen-exercise").hidden = true;
+    $("#screen-results").hidden = false;
+    $("#timer").hidden = true;
+    $("#trackFill").style.width = "100%";
+
+    $("#r-grade").innerHTML = pts.toFixed(1) + "<small> / 20</small>";
+    var band = pts >= 18 ? ["Excelente", "var(--ok-soft)", "var(--ok)"]
+      : pts >= 15 ? ["Logrado", "var(--accent-soft)", "var(--accent)"]
+      : pts >= 11 ? ["En proceso", "var(--amber-soft)", "var(--amber)"]
+      : ["Requiere refuerzo", "var(--bad-soft)", "var(--bad)"];
+    var bg = $("#r-badge"); bg.textContent = band[0]; bg.style.background = band[1]; bg.style.color = band[2];
+    var mm = Math.floor(used / 60), ss = used % 60;
+    $("#r-line").textContent = (byTime ? "Se agotaron los 20 minutos. " : "") + "Terminaste en " + mm + " min " + (ss < 10 ? "0" : "") + ss + " s. " +
+      (pts >= 15 ? "Dominas el cálculo y la lectura de las medidas de posición." : "Revisa la retroalimentación: la posición del cuantil y la interpolación son los pasos que más pesan.");
+
+    var fb = $("#r-feedback"); fb.innerHTML = "";
+    ST.results.forEach(function (r) {
+      var full = r.pts >= r.max - 1e-9, zero = r.pts <= 1e-9;
+      var d = document.createElement("div"); d.className = "fb";
+      var dl = r.user.map(function (u, q) {
+        var c = r.right[q] || r.right[0] || ["", ""];
+        return "<dt>Tu respuesta</dt><dd>" + esc(u[0]) + ": " + esc(u[1]) + "</dd><dt>Correcta</dt><dd>" + esc(c[0]) + ": " + esc(c[1]) + "</dd>";
+      }).join("");
+      d.innerHTML = "<h4><span class='mark " + (full ? "y" : zero ? "n" : "p") + "'>" + (full ? "✓" : zero ? "✕" : "~") + "</span>" +
+        esc(r.title) + " <span style='margin-left:auto;font-family:\"IBM Plex Mono\",monospace;font-size:.8rem;color:var(--ink-3)'>" +
+        (Math.round(r.pts * 10) / 10) + "/" + r.max + "</span></h4><dl>" + dl + "</dl><p class='tip'>" + esc(r.tip) + "</p>";
+      fb.appendChild(d);
+    });
+
+    $("#r-tablecap").textContent = "Medidas de posición de " + e.n + " " + e.sc.subject + " según " + e.sc.variable.toLowerCase() +
+      " (" + e.sc.unidad + "). Distribución asimétrica a la " + e.rel + ".";
+    $("#r-tabla").innerHTML = tablaResumen(e);
+    drawChart(e);
+    $("#r-figcap").textContent = "Figura 1. Distribución de los " + e.n + " valores con la ubicación de la moda, la mediana y la media.";
+
+    var nombre = ST.alumno.ape.toUpperCase() + ", " + ST.alumno.nom;
+    $("#c-name").textContent = nombre;
+    $("#c-case").textContent = e.sc.title;
+    $("#c-cuant").textContent = e.c1.def.et + " y " + e.c2.def.et;
+    $("#c-score").textContent = pts.toFixed(1) + " / 20";
+    $("#c-time").textContent = mm + " min " + (ss < 10 ? "0" : "") + ss + " s";
+    var d2 = new Date();
+    $("#c-date").textContent = d2.toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" });
+    var seed = nombre + "|" + e.sc.title + "|" + e.c1.def.et + "|" + d2.getTime() + "|" + pts;
+    var hsh = 0; for (var q2 = 0; q2 < seed.length; q2++) { hsh = (hsh * 31 + seed.charCodeAt(q2)) >>> 0; }
+    $("#c-code").textContent = "MP-" + hsh.toString(36).toUpperCase() + (ST.alumno.cod ? " · " + ST.alumno.cod : "") + (ST.alumno.sec ? " · " + ST.alumno.sec : "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function tablaResumen(e) {
+    var f = [
+      ["Media  x̄", f2(e.xb), "Σxᵢ / n = " + f1(e.S) + " / " + e.n],
+      ["Mediana  Me", f2(e.Me.valor), e.Me.par ? "semisuma de x" + sub(e.Me.p1) + " y x" + sub(e.Me.p2) : "x" + sub(e.Me.p1)],
+      ["Moda  Mo", f1(e.Mo.valores[0]), "frecuencia 3 · distribución unimodal"],
+      [e.c1.def.et, f2(e.c1.p.valor), "j = " + e.c1.p.j.toFixed(2) + " · interpolado entre " + f1(e.c1.p.Li) + " y " + f1(e.c1.p.Ld)],
+      [e.c2.def.et, f2(e.c2.p.valor), "j = " + e.c2.p.j.toFixed(2) + " · interpolado entre " + f1(e.c2.p.Li) + " y " + f1(e.c2.p.Ld)],
+      ["x̄ (" + e.sc.cats[0] + ")", f2(e.mA), "n = " + e.gA.length],
+      ["x̄ (" + e.sc.cats[1] + ")", f2(e.mB), "n = " + e.gB.length],
+      ["Nueva media  ȳ", f2(e.nuevaMedia), "y = " + e.cc + "·x " + (e.bb >= 0 ? "+ " : "− ") + Math.abs(e.bb) + " · tercera propiedad"]
+    ];
+    var h = '<table class="xtab"><thead><tr><th class="corner">Medida</th><th>Valor (' + esc(e.sc.unidad) + ")</th><th>Cómo se obtiene</th></tr></thead><tbody>";
+    f.forEach(function (r) {
+      h += "<tr><th>" + esc(r[0]) + "</th><td>" + r[1] + '</td><td style="text-align:left">' + esc(r[2]) + "</td></tr>";
+    });
+    return h + "</tbody></table>";
+  }
+
+  function drawChart(e) {
+    var cv = $("#r-chart");
+    var cs = getComputedStyle(document.documentElement);
+    var C = function (v) { return cs.getPropertyValue(v).trim(); };
+    var W = cv.parentNode.clientWidth - 36, H = 300;
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
+    var g = cv.getContext("2d"); g.scale(dpr, dpr);
+    g.clearRect(0, 0, W, H);
+
+    var padL = 30, padR = 24, padT = 30, padB = 62;
+    var pw = W - padL - padR, ph = H - padT - padB;
+    var lo = e.vals[0], hi = e.vals[e.n - 1], span = hi - lo || 1;
+    lo -= span * 0.08; hi += span * 0.08; span = hi - lo;
+    var X = function (v) { return padL + (v - lo) / span * pw; };
+    var base = padT + ph - 26;
+
+    /* eje */
+    g.strokeStyle = C("--line-2"); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(padL, base); g.lineTo(W - padR, base); g.stroke();
+    g.font = '10px "IBM Plex Mono", monospace'; g.fillStyle = C("--ink-3");
+    g.textAlign = "center"; g.textBaseline = "top";
+    for (var t = 0; t <= 4; t++) {
+      var vv = lo + span * t / 4, x = X(vv);
+      g.beginPath(); g.moveTo(x, base); g.lineTo(x, base + 5); g.stroke();
+      g.fillText(vv.toFixed(1), x, base + 8);
+    }
+    g.fillText(e.sc.unidad, padL + pw / 2, base + 26);
+
+    /* puntos, apilados cuando se repiten */
+    var cuenta = {};
+    e.vals.forEach(function (v) {
+      var k = v.toFixed(1);
+      cuenta[k] = (cuenta[k] || 0) + 1;
+      var x = X(v), y = base - 7 - (cuenta[k] - 1) * 9;
+      g.fillStyle = C("--accent-soft");
+      g.strokeStyle = C("--accent"); g.lineWidth = 1.2;
+      g.beginPath(); g.arc(x, y, 4.2, 0, 6.284); g.fill(); g.stroke();
+    });
+
+    /* marcadores */
+    var marcas = [
+      { v: e.Mo.valores[0], t: "Mo", c: C("--amber") },
+      { v: e.Me.valor, t: "Me", c: C("--ink-2") },
+      { v: e.xb, t: "x̄", c: C("--bad") }
+    ];
+    marcas.forEach(function (m, i) {
+      var x = X(m.v), top = padT + 6 + i * 17;
+      g.strokeStyle = m.c; g.lineWidth = 1.6;
+      g.setLineDash([4, 3]);
+      g.beginPath(); g.moveTo(x, top + 6); g.lineTo(x, base); g.stroke();
+      g.setLineDash([]);
+      g.fillStyle = m.c;
+      g.font = 'bold 11px "IBM Plex Mono", monospace';
+      g.textAlign = "left"; g.textBaseline = "middle";
+      g.fillText(m.t + " = " + m.v.toFixed(2), x + 6, top);
+      g.beginPath(); g.arc(x, top + 6, 3, 0, 6.284); g.fill();
+    });
+  }
+
+  $("#printBtn").addEventListener("click", function () { window.print(); });
+  $("#againBtn").addEventListener("click", function () { location.reload(); });
+  window.addEventListener("beforeunload", function (ev) {
+    if (ST.started && !ST.finished) { ev.preventDefault(); ev.returnValue = ""; }
+  });
+
+  window.__LAB3__ = { buildExercise: buildExercise, SCEN: SCEN, ex: function () { return EX; }, st: function () { return ST; },
+                      steps: STEPS, percentil: percentil, mediana: mediana, moda: moda };
+})();
+
+</script>
+</body>
+</html>
